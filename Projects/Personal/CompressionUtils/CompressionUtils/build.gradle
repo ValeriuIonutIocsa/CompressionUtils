@@ -1,0 +1,18 @@
+ext {
+    mainClass = 'com.personal.compression.AppStartCompressionUtils'
+    projectVersion = '1.0.0'
+    jarFolderPath = 'C:\\IVI\\Apps\\Scripts\\General\\CompressionUtils'
+
+    subProjectNames = [
+            ':xml-utils',
+            ':app-info'
+    ]
+    compileClassPaths = [
+            'info.picocli:picocli:4.7.0'
+    ]
+    compileJarFilePaths = []
+    testCompileClassPaths = []
+    testCompileJarFilePaths = []
+}
+
+apply from: gradle.ext.rootDirPath + '/common_build.gradle'
