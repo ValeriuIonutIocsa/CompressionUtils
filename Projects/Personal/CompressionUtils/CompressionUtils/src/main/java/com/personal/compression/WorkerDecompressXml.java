@@ -40,7 +40,7 @@ class WorkerDecompressXml {
 			XmlDomUtils.saveXmlFile(document, false, 0, outputFilePathString);
 
 			final boolean success = FactoryFileDeleter.getInstance()
-					.deleteFile(temporaryOutputFilePathString, true);
+					.deleteFile(temporaryOutputFilePathString, false, true);
 			if (success) {
 				exitCode = 0;
 			} else {

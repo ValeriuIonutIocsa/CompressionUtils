@@ -39,7 +39,7 @@ class WorkerCompressXml {
 			GZipFileCompressionUtils.compressFile(temporaryOutputFilePathString, outputFilePathString);
 
 			final boolean success = FactoryFileDeleter.getInstance()
-					.deleteFile(temporaryOutputFilePathString, true);
+					.deleteFile(temporaryOutputFilePathString, false, true);
 			if (success) {
 				exitCode = 0;
 			} else {

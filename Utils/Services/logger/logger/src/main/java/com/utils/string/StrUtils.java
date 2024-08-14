@@ -4,16 +4,18 @@ import java.io.PrintStream;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
-import java.text.SimpleDateFormat;
 import java.time.Duration;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.Date;
 import java.util.Locale;
 
 import org.apache.commons.lang3.StringUtils;
 
 import com.utils.annotations.ApiMethod;
 import com.utils.string.characters.SpecialCharacterUtils;
+import com.utils.string.converters.ConverterInstant;
 
 public final class StrUtils {
 
@@ -44,6 +46,52 @@ public final class StrUtils {
 			yesNoString = "no";
 		}
 		return yesNoString;
+	}
+
+	/**
+	 * @param n
+	 *            Integer value
+	 * @return empty string if n is null, string value of n otherwise
+	 */
+	@ApiMethod
+	public static String integerToString(
+			final Integer n,
+			final boolean useGrouping) {
+
+		final String str;
+		if (n != null) {
+			if (useGrouping) {
+				str = NumberFormat.getNumberInstance(Locale.US).format(n);
+			} else {
+				str = String.valueOf(n);
+			}
+		} else {
+			str = "";
+		}
+		return str;
+	}
+
+	/**
+	 * @param n
+	 *            Long value
+	 * @return empty string if n is null, string value of n otherwise
+	 */
+	@ApiMethod
+	public static String longToString(
+			final Long n,
+			final boolean useGrouping) {
+
+		final String str;
+		if (n != null) {
+			if (useGrouping) {
+				str = NumberFormat.getNumberInstance(Locale.US).format(n);
+			} else {
+				str = String.valueOf(n);
+			}
+		} else {
+			str = "";
+		}
+		return str;
 	}
 
 	@ApiMethod
@@ -140,6 +188,14 @@ public final class StrUtils {
 	}
 
 	@ApiMethod
+	public static String createAddressInterval(
+			final long startAddress,
+			final long endAddress) {
+
+		return StrUtils.createHexString(startAddress) + " - " + StrUtils.createHexString(endAddress);
+	}
+
+	@ApiMethod
 	public static String createHexString(
 			final long value) {
 
@@ -168,12 +224,49 @@ public final class StrUtils {
 	}
 
 	@ApiMethod
+	public static String createPositiveHexString(
+			final long value) {
+
+		final StringBuilder stringBuilder = new StringBuilder();
+		appendPositiveHexString(value, stringBuilder);
+		return stringBuilder.toString();
+	}
+
+	@ApiMethod
+	public static void appendPositiveHexString(
+			final long value,
+			final StringBuilder stringBuilder) {
+
+		if (value >= 0) {
+
+			stringBuilder
+					.append("0x")
+					.append(Long.toHexString(value));
+		}
+	}
+
+	@ApiMethod
+	public static void printPositiveHexString(
+			final long value,
+			final PrintStream printStream) {
+
+		if (value > 0) {
+
+			printStream.print("0x");
+			printStream.print(Long.toHexString(value));
+		}
+	}
+
+	@ApiMethod
 	public static String byteArrayToBinaryString(
 			final byte[] byteArray) {
 
 		final StringBuilder sb = new StringBuilder();
-		for (final byte b : byteArray) {
-			sb.append(unsignedIntToPaddedBinaryString(Byte.toUnsignedInt(b), 8));
+		if (byteArray != null) {
+
+			for (final byte b : byteArray) {
+				sb.append(unsignedIntToPaddedBinaryString(Byte.toUnsignedInt(b), 8));
+			}
 		}
 		return sb.toString();
 	}
@@ -184,12 +277,15 @@ public final class StrUtils {
 			final String separator) {
 
 		final StringBuilder sb = new StringBuilder();
-		for (int i = 0; i < byteArray.length; i++) {
+		if (byteArray != null) {
 
-			final byte b = byteArray[i];
-			sb.append(unsignedIntToPaddedBinaryString(Byte.toUnsignedInt(b), 8));
-			if (i < byteArray.length - 1) {
-				sb.append(separator);
+			for (int i = 0; i < byteArray.length; i++) {
+
+				final byte b = byteArray[i];
+				sb.append(unsignedIntToPaddedBinaryString(Byte.toUnsignedInt(b), 8));
+				if (i < byteArray.length - 1) {
+					sb.append(separator);
+				}
 			}
 		}
 		return sb.toString();
@@ -200,8 +296,11 @@ public final class StrUtils {
 			final byte[] byteArray) {
 
 		final StringBuilder sb = new StringBuilder();
-		for (final byte b : byteArray) {
-			sb.append(unsignedIntToPaddedHexString(Byte.toUnsignedInt(b), 2));
+		if (byteArray != null) {
+
+			for (final byte b : byteArray) {
+				sb.append(unsignedIntToPaddedHexString(Byte.toUnsignedInt(b), 2));
+			}
 		}
 		return sb.toString();
 	}
@@ -212,12 +311,15 @@ public final class StrUtils {
 			final String separator) {
 
 		final StringBuilder sb = new StringBuilder();
-		for (int i = 0; i < byteArray.length; i++) {
+		if (byteArray != null) {
 
-			final byte b = byteArray[i];
-			sb.append(unsignedIntToPaddedHexString(Byte.toUnsignedInt(b), 2));
-			if (i < byteArray.length - 1) {
-				sb.append(separator);
+			for (int i = 0; i < byteArray.length; i++) {
+
+				final byte b = byteArray[i];
+				sb.append(unsignedIntToPaddedHexString(Byte.toUnsignedInt(b), 2));
+				if (i < byteArray.length - 1) {
+					sb.append(separator);
+				}
 			}
 		}
 		return sb.toString();
@@ -400,14 +502,15 @@ public final class StrUtils {
 	@ApiMethod
 	public static String timeSToString(
 			final double time) {
+
 		return doubleToString(time, 0, 2, true) + "s";
 	}
 
 	@ApiMethod
 	public static void printRepeatedString(
-            final String string,
-            final int count,
-            final PrintStream printStream) {
+			final String string,
+			final int count,
+			final PrintStream printStream) {
 
 		for (int i = 0; i < count; i++) {
 			printStream.print(string);
@@ -417,18 +520,21 @@ public final class StrUtils {
 	@ApiMethod
 	public static String timeMsToString(
 			final double time) {
+
 		return doubleToString(time, 0, 2, true) + "ms";
 	}
 
 	@ApiMethod
 	public static String timeUsToString(
 			final double time) {
+
 		return doubleToString(time, 0, 2, true) + SpecialCharacterUtils.MU + "s";
 	}
 
 	@ApiMethod
 	public static String timeNsToString(
 			final double time) {
+
 		return doubleToString(time, 0, 2, true) + "ns";
 	}
 
@@ -606,6 +712,14 @@ public final class StrUtils {
 
 	@ApiMethod
 	public static String durationToString(
+			final Instant start) {
+
+		final Duration duration = Duration.between(start, Instant.now());
+		return durationToString(duration);
+	}
+
+	@ApiMethod
+	public static String durationToString(
 			final Duration duration) {
 
 		final StringBuilder stringBuilder = new StringBuilder();
@@ -664,6 +778,7 @@ public final class StrUtils {
 	@ApiMethod
 	public static String reflectionToString(
 			final Object object) {
+
 		return ReflectionToString.work(object);
 	}
 
@@ -714,23 +829,127 @@ public final class StrUtils {
 	}
 
 	@ApiMethod
+	public static String removePrefix(
+			final String str,
+			final String prefix) {
+
+		final String resultStr;
+		if (str != null) {
+
+			if (str.startsWith(prefix)) {
+				resultStr = str.substring(prefix.length());
+			} else {
+				resultStr = str;
+			}
+
+		} else {
+			resultStr = null;
+		}
+		return resultStr;
+	}
+
+	@ApiMethod
+	public static String removePrefixIgnoreCase(
+			final String str,
+			final String prefix) {
+
+		final String resultStr;
+		if (str != null) {
+
+			if (StringUtils.startsWithIgnoreCase(str, prefix)) {
+				resultStr = str.substring(prefix.length());
+			} else {
+				resultStr = str;
+			}
+
+		} else {
+			resultStr = null;
+		}
+		return resultStr;
+	}
+
+	@ApiMethod
+	public static String removeSuffix(
+			final String str,
+			final String suffix) {
+
+		final String resultStr;
+		if (str != null) {
+
+			if (str.endsWith(suffix)) {
+				resultStr = str.substring(0, str.length() - suffix.length());
+			} else {
+				resultStr = str;
+			}
+
+		} else {
+			resultStr = null;
+		}
+		return resultStr;
+	}
+
+	@ApiMethod
+	public static String removeSuffixIgnoreCase(
+			final String str,
+			final String suffix) {
+
+		final String resultStr;
+		if (str != null) {
+
+			if (StringUtils.endsWithIgnoreCase(str, suffix)) {
+				resultStr = str.substring(0, str.length() - suffix.length());
+			} else {
+				resultStr = str;
+			}
+
+		} else {
+			resultStr = null;
+		}
+		return resultStr;
+	}
+
+	@ApiMethod
 	public static String createDateTimeString() {
-		return new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new Date());
+
+		final DateTimeFormatter dateTimeFormatter =
+				DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")
+						.withLocale(Locale.US).withZone(ZoneId.systemDefault());
+		return dateTimeFormatter.format(Instant.now());
 	}
 
 	@ApiMethod
 	public static String createPathDateTimeString() {
-		return new SimpleDateFormat("dd_MMM_yyyy__hh_mm_ss_SSS__zzz", Locale.US).format(new Date());
+
+		final DateTimeFormatter dateTimeFormatter =
+				DateTimeFormatter.ofPattern("dd_MMM_yyyy__HH_mm_ss_SSS__z")
+						.withLocale(Locale.US).withZone(ZoneId.systemDefault());
+		String pathDateTimeString = dateTimeFormatter.format(Instant.now());
+		pathDateTimeString = StringUtils.replaceChars(pathDateTimeString, '/', '_');
+		pathDateTimeString = StringUtils.replaceChars(pathDateTimeString, ';', '_');
+		return pathDateTimeString;
 	}
 
 	@ApiMethod
 	public static String createDisplayDateTimeString() {
-		return new SimpleDateFormat("dd MMM yyyy, hh:mm:ss zzz", Locale.US).format(new Date());
+
+		final Instant instant = Instant.now();
+		return createDisplayDateTimeString(instant);
+	}
+
+	@ApiMethod
+	public static String createDisplayDateTimeString(
+			final Instant instant) {
+
+		final DateTimeFormatter dateTimeFormatter =
+				DateTimeFormatter.ofPattern(ConverterInstant.FULL_DATE_FORMAT)
+						.withLocale(Locale.US).withZone(ZoneId.systemDefault());
+		return dateTimeFormatter.format(instant);
 	}
 
 	@ApiMethod
 	public static boolean parseBooleanFromIntString(
 			final String booleanString) {
+
 		return "1".equals(booleanString);
 	}
 
@@ -837,7 +1056,7 @@ public final class StrUtils {
 			final String string) {
 
 		final int value;
-		if (StringUtils.startsWith(string, "0x")) {
+		if (StringUtils.startsWithIgnoreCase(string, "0x")) {
 			value = StrUtils.tryParsePositiveIntFromHexString(string);
 		} else {
 			value = StrUtils.tryParsePositiveInt(string);
@@ -900,7 +1119,7 @@ public final class StrUtils {
 			final String string) {
 
 		final long value;
-		if (StringUtils.startsWith(string, "0x")) {
+		if (StringUtils.startsWithIgnoreCase(string, "0x")) {
 			value = StrUtils.tryParsePositiveLongFromHexString(string);
 		} else {
 			value = StrUtils.tryParsePositiveLong(string);
@@ -976,6 +1195,29 @@ public final class StrUtils {
 			byteArray = new byte[] {};
 		}
 		return byteArray;
+	}
+
+	@ApiMethod
+	public static String capitalizeFirstLetters(
+			final String str) {
+
+		String result = null;
+		if (str != null) {
+
+			final StringBuilder sbResult = new StringBuilder();
+			final String[] strPartArray = StringUtils.split(str);
+			for (int i = 0; i < strPartArray.length; i++) {
+
+				final String strPart = strPartArray[i];
+				sbResult.append(StringUtils.capitalize(strPart));
+				if (i < strPartArray.length - 1) {
+					sbResult.append(' ');
+				}
+			}
+			result = sbResult.toString();
+
+		}
+		return result;
 	}
 
 	@ApiMethod

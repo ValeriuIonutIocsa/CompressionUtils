@@ -14,6 +14,7 @@ public final class RegexUtils {
 	public static final Pattern NOT_WHITE_SPACE_PATTERN = Pattern.compile("\\S+");
 	public static final Pattern WORD_PATTERN = Pattern.compile("\\w+");
 	public static final Pattern NOT_WORD_PATTERN = Pattern.compile("\\W+");
+	public static final Pattern DIGITS_ONLY_PATTERN = Pattern.compile("\\d+");
 
 	private RegexUtils() {
 	}
@@ -46,7 +47,7 @@ public final class RegexUtils {
 
 		} catch (final Exception ignored) {
 			if (StringUtils.isNotBlank(patternString)) {
-				Logger.printWarning("failed to compile REGEX pattern \"" + patternString + "\"!");
+				Logger.printWarning("failed to compile REGEX pattern \"" + patternString + "\"");
 			}
 		}
 		return pattern;
