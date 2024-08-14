@@ -3,13 +3,15 @@ package com.personal.compression;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import com.utils.test.TestInputUtils;
+
 class AppStartCompressionUtilsTest {
 
 	@Test
 	void testMainWithoutExit() {
 
 		final String[] args;
-		final int input = Integer.parseInt("102");
+		final int input = TestInputUtils.parseTestInputNumber("102");
 		if (input == 1) {
 			args = new String[] { "compress",
 					"D:\\tmp\\CompressionUtils\\test.json",
