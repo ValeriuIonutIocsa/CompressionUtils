@@ -11,7 +11,7 @@ class AppStartCompressionUtilsTest {
 	void testMainWithoutExit() {
 
 		final String[] args;
-		final int input = TestInputUtils.parseTestInputNumber("102");
+		final int input = TestInputUtils.parseTestInputNumber("103");
 		if (input == 1) {
 			args = new String[] { "compress",
 					"D:\\IVI_MISC\\Tmp\\CompressionUtils\\test.json",
@@ -42,9 +42,9 @@ class AppStartCompressionUtilsTest {
 		} else if (input == 101) {
 			args = new String[] {};
 		} else if (input == 102) {
-			args = new String[] { "--help" };
+			args = new String[] { "-help" };
 		} else if (input == 103) {
-			args = new String[] { "--version" };
+			args = new String[] { "-version" };
 
 		} else {
 			throw new RuntimeException();

@@ -46,9 +46,9 @@ class WorkerCompressXml {
 				exitCode = -1;
 			}
 
-		} catch (final Exception exc) {
+		} catch (final Throwable throwable) {
 			Logger.printError("error occurred while compressing XML file");
-			Logger.printException(exc);
+			Logger.printThrowable(throwable);
 			exitCode = -1;
 		}
 		return exitCode;

@@ -84,14 +84,14 @@ public final class FactoryAppInfo {
 				}
 			}
 
-		} catch (final Exception ignored) {
+		} catch (final Throwable ignored) {
 		}
 		if (!defaultBuildTime) {
 			buildTime = StrUtils.createDisplayDateTimeString();
 		}
 
-		return new AppInfo(
-				appTitle, defaultTitle, appVersion, defaultVersion, buildTime, defaultBuildTime);
+		return newInstanceL2(appTitle, defaultTitle, appVersion, defaultVersion,
+				buildTime, defaultBuildTime);
 	}
 
 	static String formatTitle(
@@ -111,5 +111,17 @@ public final class FactoryAppInfo {
 			lastCh = ch;
 		}
 		return stringBuilder.toString();
+	}
+
+	public static AppInfo newInstanceL2(
+			final String appTitle,
+			final boolean defaultTitle,
+			final String appVersion,
+			final boolean defaultVersion,
+			final String buildTime,
+			final boolean defaultBuildTime) {
+
+		return new AppInfo(appTitle, defaultTitle, appVersion, defaultVersion,
+				buildTime, defaultBuildTime);
 	}
 }

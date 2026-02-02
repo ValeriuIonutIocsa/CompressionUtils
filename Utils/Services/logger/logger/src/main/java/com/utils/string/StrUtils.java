@@ -6,15 +6,18 @@ import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Locale;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 
 import com.utils.annotations.ApiMethod;
 import com.utils.string.characters.SpecialCharacterUtils;
+import com.utils.string.converters.ConverterDate;
 import com.utils.string.converters.ConverterInstant;
 
 public final class StrUtils {
@@ -196,6 +199,44 @@ public final class StrUtils {
 	}
 
 	@ApiMethod
+	public static long parseStartAddressFromAddressInterval(
+			final String addressInterval) {
+
+		long startAddress = -1;
+		try {
+			final String middleString = " - ";
+			final int index = addressInterval.indexOf(middleString);
+			if (index > 0) {
+
+				final String startAddressString = addressInterval.substring(0, index);
+				startAddress = StrUtils.tryParsePositiveLongFromHexString(startAddressString);
+			}
+
+		} catch (final Throwable ignored) {
+		}
+		return startAddress;
+	}
+
+	@ApiMethod
+	public static long parseEndAddressFromAddressInterval(
+			final String addressInterval) {
+
+		long endAddress = -1;
+		try {
+			final String middleString = " - ";
+			final int index = addressInterval.indexOf(middleString);
+			if (index > 0) {
+
+				final String endAddressString = addressInterval.substring(index + middleString.length());
+				endAddress = StrUtils.tryParsePositiveLongFromHexString(endAddressString);
+			}
+
+		} catch (final Throwable ignored) {
+		}
+		return endAddress;
+	}
+
+	@ApiMethod
 	public static String createHexString(
 			final long value) {
 
@@ -255,6 +296,35 @@ public final class StrUtils {
 			printStream.print("0x");
 			printStream.print(Long.toHexString(value));
 		}
+	}
+
+	@ApiMethod
+	public static String createPaddedHexString(
+			final long value,
+			final int size) {
+
+		return "0x" + unsignedLongToPaddedHexString(value, size);
+	}
+
+	@ApiMethod
+	public static void appendPaddedHexString(
+			final long value,
+			final int size,
+			final StringBuilder stringBuilder) {
+
+		stringBuilder
+				.append("0x")
+				.append(unsignedLongToPaddedHexString(value, size));
+	}
+
+	@ApiMethod
+	public static void printPaddedHexString(
+			final long value,
+			final int size,
+			final PrintStream printStream) {
+
+		printStream.print("0x");
+		printStream.print(unsignedLongToPaddedHexString(value, size));
 	}
 
 	@ApiMethod
@@ -829,86 +899,6 @@ public final class StrUtils {
 	}
 
 	@ApiMethod
-	public static String removePrefix(
-			final String str,
-			final String prefix) {
-
-		final String resultStr;
-		if (str != null) {
-
-			if (str.startsWith(prefix)) {
-				resultStr = str.substring(prefix.length());
-			} else {
-				resultStr = str;
-			}
-
-		} else {
-			resultStr = null;
-		}
-		return resultStr;
-	}
-
-	@ApiMethod
-	public static String removePrefixIgnoreCase(
-			final String str,
-			final String prefix) {
-
-		final String resultStr;
-		if (str != null) {
-
-			if (StringUtils.startsWithIgnoreCase(str, prefix)) {
-				resultStr = str.substring(prefix.length());
-			} else {
-				resultStr = str;
-			}
-
-		} else {
-			resultStr = null;
-		}
-		return resultStr;
-	}
-
-	@ApiMethod
-	public static String removeSuffix(
-			final String str,
-			final String suffix) {
-
-		final String resultStr;
-		if (str != null) {
-
-			if (str.endsWith(suffix)) {
-				resultStr = str.substring(0, str.length() - suffix.length());
-			} else {
-				resultStr = str;
-			}
-
-		} else {
-			resultStr = null;
-		}
-		return resultStr;
-	}
-
-	@ApiMethod
-	public static String removeSuffixIgnoreCase(
-			final String str,
-			final String suffix) {
-
-		final String resultStr;
-		if (str != null) {
-
-			if (StringUtils.endsWithIgnoreCase(str, suffix)) {
-				resultStr = str.substring(0, str.length() - suffix.length());
-			} else {
-				resultStr = str;
-			}
-
-		} else {
-			resultStr = null;
-		}
-		return resultStr;
-	}
-
-	@ApiMethod
 	public static String createDateTimeString() {
 
 		final DateTimeFormatter dateTimeFormatter =
@@ -941,9 +931,18 @@ public final class StrUtils {
 			final Instant instant) {
 
 		final DateTimeFormatter dateTimeFormatter =
-				DateTimeFormatter.ofPattern(ConverterInstant.FULL_DATE_FORMAT)
+				DateTimeFormatter.ofPattern(ConverterInstant.FULL_INSTANT_FORMAT)
 						.withLocale(Locale.US).withZone(ZoneId.systemDefault());
 		return dateTimeFormatter.format(instant);
+	}
+
+	@ApiMethod
+	public static String createDisplayDateString(
+			final LocalDate date) {
+
+		final DateTimeFormatter dateTimeFormatter =
+				DateTimeFormatter.ofPattern(ConverterDate.DATE_FORMAT).withLocale(Locale.US);
+		return dateTimeFormatter.format(date);
 	}
 
 	@ApiMethod
@@ -960,7 +959,7 @@ public final class StrUtils {
 		Byte value = null;
 		try {
 			value = (byte) Integer.parseInt(byteString);
-		} catch (final Exception ignored) {
+		} catch (final Throwable ignored) {
 		}
 		return value;
 	}
@@ -972,7 +971,7 @@ public final class StrUtils {
 		Byte value = null;
 		try {
 			value = (byte) Integer.parseInt(byteString, 16);
-		} catch (final Exception ignored) {
+		} catch (final Throwable ignored) {
 		}
 		return value;
 	}
@@ -984,7 +983,7 @@ public final class StrUtils {
 		Byte value = null;
 		try {
 			value = (byte) Integer.parseInt(byteString, 2);
-		} catch (final Exception ignored) {
+		} catch (final Throwable ignored) {
 		}
 		return value;
 	}
@@ -996,7 +995,7 @@ public final class StrUtils {
 		byte value = -1;
 		try {
 			value = Byte.parseByte(byteString);
-		} catch (final Exception ignored) {
+		} catch (final Throwable ignored) {
 		}
 		return value;
 	}
@@ -1008,7 +1007,7 @@ public final class StrUtils {
 		Short value = null;
 		try {
 			value = Short.parseShort(shortString);
-		} catch (final Exception ignored) {
+		} catch (final Throwable ignored) {
 		}
 		return value;
 	}
@@ -1020,7 +1019,7 @@ public final class StrUtils {
 		Integer value = null;
 		try {
 			value = Integer.parseInt(intString);
-		} catch (final Exception ignored) {
+		} catch (final Throwable ignored) {
 		}
 		return value;
 	}
@@ -1032,7 +1031,7 @@ public final class StrUtils {
 		int value = -1;
 		try {
 			value = Integer.parseInt(intString);
-		} catch (final Exception ignored) {
+		} catch (final Throwable ignored) {
 		}
 		return value;
 	}
@@ -1046,7 +1045,7 @@ public final class StrUtils {
 			String hexString = hexStringParam;
 			hexString = hexString.substring(2);
 			value = Integer.parseInt(hexString, 16);
-		} catch (final Exception ignored) {
+		} catch (final Throwable ignored) {
 		}
 		return value;
 	}
@@ -1056,7 +1055,7 @@ public final class StrUtils {
 			final String string) {
 
 		final int value;
-		if (StringUtils.startsWithIgnoreCase(string, "0x")) {
+		if (Strings.CI.startsWith(string, "0x")) {
 			value = StrUtils.tryParsePositiveIntFromHexString(string);
 		} else {
 			value = StrUtils.tryParsePositiveInt(string);
@@ -1071,7 +1070,7 @@ public final class StrUtils {
 		Long value = null;
 		try {
 			value = Long.parseLong(longString);
-		} catch (final Exception ignored) {
+		} catch (final Throwable ignored) {
 		}
 		return value;
 	}
@@ -1083,7 +1082,7 @@ public final class StrUtils {
 		long value = -1;
 		try {
 			value = Long.parseLong(longString);
-		} catch (final Exception ignored) {
+		} catch (final Throwable ignored) {
 		}
 		return value;
 	}
@@ -1097,7 +1096,7 @@ public final class StrUtils {
 			String hexString = hexStringParam;
 			hexString = hexString.substring(2);
 			value = Long.parseLong(hexString, 16);
-		} catch (final Exception ignored) {
+		} catch (final Throwable ignored) {
 		}
 		return value;
 	}
@@ -1109,7 +1108,7 @@ public final class StrUtils {
 		long value = -1;
 		try {
 			value = Long.parseLong(hexString, 16);
-		} catch (final Exception ignored) {
+		} catch (final Throwable ignored) {
 		}
 		return value;
 	}
@@ -1119,7 +1118,7 @@ public final class StrUtils {
 			final String string) {
 
 		final long value;
-		if (StringUtils.startsWithIgnoreCase(string, "0x")) {
+		if (Strings.CI.startsWith(string, "0x")) {
 			value = StrUtils.tryParsePositiveLongFromHexString(string);
 		} else {
 			value = StrUtils.tryParsePositiveLong(string);
@@ -1135,7 +1134,7 @@ public final class StrUtils {
 		double result = defaultValue;
 		try {
 			result = Double.parseDouble(doubleString);
-		} catch (final Exception ignored) {
+		} catch (final Throwable ignored) {
 		}
 		return result;
 	}
@@ -1169,7 +1168,7 @@ public final class StrUtils {
 			}
 			byteArray = data;
 
-		} catch (final Exception ignored) {
+		} catch (final Throwable ignored) {
 			byteArray = new byte[] {};
 		}
 		return byteArray;
@@ -1191,7 +1190,7 @@ public final class StrUtils {
 			}
 			byteArray = data;
 
-		} catch (final Exception ignored) {
+		} catch (final Throwable ignored) {
 			byteArray = new byte[] {};
 		}
 		return byteArray;

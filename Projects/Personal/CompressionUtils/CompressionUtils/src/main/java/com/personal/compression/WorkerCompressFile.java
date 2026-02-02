@@ -24,9 +24,9 @@ class WorkerCompressFile {
 			GZipFileCompressionUtils.compressFile(inputFilePathString, outputFilePathString);
 			exitCode = 0;
 
-		} catch (final Exception exc) {
+		} catch (final Throwable throwable) {
 			Logger.printError("error occurred while compressing file");
-			Logger.printException(exc);
+			Logger.printThrowable(throwable);
 			exitCode = -1;
 		}
 		return exitCode;

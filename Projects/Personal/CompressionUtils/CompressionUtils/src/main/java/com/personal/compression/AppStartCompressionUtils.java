@@ -2,13 +2,13 @@ package com.personal.compression;
 
 import java.time.Instant;
 
+import com.personal.compression.app_info.FactoryAppInfoCompressionUtils;
 import com.personal.compression.modes.CompressionUtilsMode;
 import com.personal.compression.modes.FactoryCompressionUtilsMode;
+import com.utils.app_info.AppInfo;
 import com.utils.io.IoUtils;
 import com.utils.io.PathUtils;
 import com.utils.log.Logger;
-
-import picocli.CommandLine;
 
 final class AppStartCompressionUtils {
 
@@ -25,101 +25,98 @@ final class AppStartCompressionUtils {
 	static int mainWithoutExit(
 			final String[] args) {
 
-		Logger.setDebugMode(true);
-
-		final CommandLine.Model.CommandSpec commandSpec = CommandLine.Model.CommandSpec.create();
-		commandSpec.name("compression_utils");
-		commandSpec.mixinStandardHelpOptions(true);
-
-		commandSpec.usageMessage()
-				.description("compresses and decompresses regular files and XML files");
-
-		final CommandLine.IVersionProvider versionProvider = new VersionProviderCompressionUtils();
-		commandSpec.versionProvider(versionProvider);
-
-		commandSpec.addPositional(CommandLine.Model.PositionalParamSpec.builder()
-				.paramLabel("MODE")
-				.type(String.class)
-				.description("the mode of the application (supported modes: " +
-						FactoryCompressionUtilsMode.createSupportedValuesString() + ")")
-				.build());
-
-		commandSpec.addPositional(CommandLine.Model.PositionalParamSpec.builder()
-				.paramLabel("INPUT_FILE")
-				.type(String.class)
-				.description("path to the input file")
-				.build());
-
-		commandSpec.addPositional(CommandLine.Model.PositionalParamSpec.builder()
-				.paramLabel("OUTPUT_FILE")
-				.type(String.class)
-				.description("path to the output file")
-				.build());
-
-		final CommandLine commandLine = new CommandLine(commandSpec);
-		commandLine.setExecutionStrategy(AppStartCompressionUtils::run);
-		return commandLine.execute(args);
-	}
-
-	static int run(
-			final CommandLine.ParseResult parseResult) {
-
 		final int exitCode;
+		if (args.length == 0) {
 
-		final Integer helpExitCode = CommandLine.executeHelpRequest(parseResult);
-		if (helpExitCode != null) {
-			exitCode = helpExitCode;
+			printHelpMessage();
+			exitCode = -1;
 
 		} else {
-			final Instant start = Instant.now();
-			Logger.printProgress("compress_utils starting");
+			final String firstArgument = args[0];
+			if ("-help".equals(firstArgument)) {
 
-			final String modeString = parseResult.matchedPositionalValue(0, null);
-			final CompressionUtilsMode compressionUtilsMode =
-					FactoryCompressionUtilsMode.computeInstanceByDisplayName(modeString);
-			if (compressionUtilsMode == null) {
+				printHelpMessage();
+				exitCode = 0;
 
-				Logger.printError("invalid or missing mode");
-				exitCode = -1;
+			} else if ("-version".equals(firstArgument)) {
+
+				printAppVersion();
+				exitCode = 0;
 
 			} else {
-				Logger.printLine("mode: " + modeString);
+				if (args.length < 3) {
 
-				String inputFilePathString = parseResult.matchedPositionalValue(1, null);
-				inputFilePathString = PathUtils.computeAbsolutePath("input file", null, inputFilePathString);
-				if (inputFilePathString == null) {
+					Logger.printError("insufficient command line arguments");
+					printHelpMessage();
 					exitCode = -1;
 
 				} else {
-					Logger.printLine("input path:");
-					Logger.printLine(inputFilePathString);
-					if (!IoUtils.fileExists(inputFilePathString)) {
+					exitCode = mainWithoutExitL2(args);
+				}
+			}
+		}
+		return exitCode;
+	}
 
-						Logger.printError("input file does not exist");
+	private static int mainWithoutExitL2(
+			final String[] args) {
+
+		final int exitCode;
+		final Instant start = Instant.now();
+
+		final AppInfo appInfo = FactoryAppInfoCompressionUtils.newInstance();
+		final String appTitleAndVersion = appInfo.getAppTitleAndVersion();
+		Logger.printProgress("starting " + appTitleAndVersion);
+
+		final String modeString = args[0];
+		final CompressionUtilsMode compressionUtilsMode =
+				FactoryCompressionUtilsMode.computeInstanceByDisplayName(modeString);
+		if (compressionUtilsMode == null) {
+
+			Logger.printError("invalid or missing mode command line argument");
+			exitCode = -1;
+
+		} else {
+			Logger.printLine("mode: " + modeString);
+
+			String inputFilePathString = args[1];
+			inputFilePathString = PathUtils.computeAbsolutePath("input file", null, inputFilePathString);
+			if (inputFilePathString == null) {
+
+				Logger.printError("missing input file path command line argument");
+				exitCode = -1;
+
+			} else {
+				Logger.printLine("input file path:");
+				Logger.printLine(inputFilePathString);
+				if (!IoUtils.fileExists(inputFilePathString)) {
+
+					Logger.printError("input file does not exist");
+					exitCode = -1;
+
+				} else {
+					String outputFilePathString = args[2];
+					outputFilePathString = PathUtils.computeAbsolutePath("output file", null, outputFilePathString);
+					if (outputFilePathString == null) {
+
+						Logger.printError("missing output file path command line argument");
 						exitCode = -1;
 
 					} else {
-						String outputFilePathString = parseResult.matchedPositionalValue(2, null);
-						outputFilePathString = PathUtils.computeAbsolutePath("output file", null, outputFilePathString);
-						if (outputFilePathString == null) {
-							exitCode = -1;
+						Logger.printLine("output file path:");
+						Logger.printLine(outputFilePathString);
 
+						if (compressionUtilsMode == CompressionUtilsMode.COMPRESS) {
+							exitCode = new WorkerCompressFile(inputFilePathString, outputFilePathString).work();
+						} else if (compressionUtilsMode == CompressionUtilsMode.DECOMPRESS) {
+							exitCode = new WorkerDecompressFile(inputFilePathString, outputFilePathString).work();
+						} else if (compressionUtilsMode == CompressionUtilsMode.COMPRESS_XML) {
+							exitCode = new WorkerCompressXml(inputFilePathString, outputFilePathString).work();
+						} else if (compressionUtilsMode == CompressionUtilsMode.DECOMPRESS_XML) {
+							exitCode = new WorkerDecompressXml(inputFilePathString, outputFilePathString).work();
 						} else {
-							Logger.printLine("output path:");
-							Logger.printLine(outputFilePathString);
-
-							if (compressionUtilsMode == CompressionUtilsMode.COMPRESS) {
-								exitCode = new WorkerCompressFile(inputFilePathString, outputFilePathString).work();
-							} else if (compressionUtilsMode == CompressionUtilsMode.DECOMPRESS) {
-								exitCode = new WorkerDecompressFile(inputFilePathString, outputFilePathString).work();
-							} else if (compressionUtilsMode == CompressionUtilsMode.COMPRESS_XML) {
-								exitCode = new WorkerCompressXml(inputFilePathString, outputFilePathString).work();
-							} else if (compressionUtilsMode == CompressionUtilsMode.DECOMPRESS_XML) {
-								exitCode = new WorkerDecompressXml(inputFilePathString, outputFilePathString).work();
-							} else {
-								Logger.printError("unsupported mode: " + compressionUtilsMode);
-								exitCode = -1;
-							}
+							Logger.printError("unsupported mode: " + compressionUtilsMode);
+							exitCode = -1;
 						}
 					}
 				}
@@ -129,5 +126,21 @@ final class AppStartCompressionUtils {
 			}
 		}
 		return exitCode;
+	}
+
+	private static void printAppVersion() {
+
+		final AppInfo appInfo = FactoryAppInfoCompressionUtils.newInstance();
+		final String appTitleAndVersion = appInfo.getAppTitleAndVersion();
+		Logger.printLine(appTitleAndVersion);
+	}
+
+	private static void printHelpMessage() {
+
+		final String supportedModesString = FactoryCompressionUtilsMode.createSupportedValuesString();
+		Logger.printLine("compression_utils MODE INPUT_FILE_PATH OUTPUT_FILE_PATH" + System.lineSeparator() +
+				"    supported modes " + supportedModesString + System.lineSeparator() +
+				"compression_utils -version" + System.lineSeparator() +
+				"    prints the application version information");
 	}
 }

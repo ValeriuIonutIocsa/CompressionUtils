@@ -190,22 +190,25 @@ public final class XmlDomUtils {
 	public static void processTextNodesRec(
 			final Node parentNode) {
 
-		final NodeList nodeList = parentNode.getChildNodes();
-		for (int i = nodeList.getLength() - 1; i >= 0; i--) {
+		if (parentNode != null) {
 
-			final Node childNode = nodeList.item(i);
-			final int nodeType = childNode.getNodeType();
-			if (nodeType == Node.ELEMENT_NODE) {
-				processTextNodesRec(childNode);
+			final NodeList nodeList = parentNode.getChildNodes();
+			for (int i = nodeList.getLength() - 1; i >= 0; i--) {
 
-			} else if (nodeType == Node.TEXT_NODE) {
+				final Node childNode = nodeList.item(i);
+				final int nodeType = childNode.getNodeType();
+				if (nodeType == Node.ELEMENT_NODE) {
+					processTextNodesRec(childNode);
 
-				final String nodeValue = childNode.getNodeValue();
-				final String trimmedNodeVal = nodeValue.trim();
-				if (trimmedNodeVal.isEmpty()) {
-					parentNode.removeChild(childNode);
-				} else {
-					childNode.setNodeValue(trimmedNodeVal);
+				} else if (nodeType == Node.TEXT_NODE) {
+
+					final String nodeValue = childNode.getNodeValue();
+					final String trimmedNodeVal = nodeValue.trim();
+					if (trimmedNodeVal.isEmpty()) {
+						parentNode.removeChild(childNode);
+					} else {
+						childNode.setNodeValue(trimmedNodeVal);
+					}
 				}
 			}
 		}
@@ -338,6 +341,38 @@ public final class XmlDomUtils {
 	}
 
 	@ApiMethod
+	public static void configureChildAttributeValue(
+			final Element parentElement,
+			final String tagName,
+			final String attributeName,
+			final String attributeValue) {
+
+		Element element = XmlDomUtils.getFirstChildElementByTagName(parentElement, tagName);
+		if (element == null) {
+
+			final Document document = parentElement.getOwnerDocument();
+			element = document.createElement(tagName);
+
+			parentElement.appendChild(element);
+		}
+		element.setAttribute(attributeName, attributeValue);
+	}
+
+	@ApiMethod
+	public static String computeChildAttributeValue(
+			final Element parentElement,
+			final String tagName,
+			final String attributeName) {
+
+		String attributeValue = "";
+		final Element element = XmlDomUtils.getFirstChildElementByTagName(parentElement, tagName);
+		if (element != null) {
+			attributeValue = element.getAttribute(attributeName);
+		}
+		return attributeValue;
+	}
+
+	@ApiMethod
 	public static String computeAttributeValue(
 			final Element parentElement,
 			final String tagName,
@@ -422,7 +457,7 @@ public final class XmlDomUtils {
 	}
 
 	@ApiMethod
-	public static void createChildWithTextContent(
+	public static Element createChildWithTextContent(
 			final Element parentElement,
 			final String childTagName,
 			final String textContent) {
@@ -432,6 +467,8 @@ public final class XmlDomUtils {
 		childElement.setTextContent(textContent);
 
 		parentElement.appendChild(childElement);
+
+		return childElement;
 	}
 
 	@ApiMethod
